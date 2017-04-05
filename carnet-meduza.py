@@ -7,7 +7,6 @@ import requests
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
-params = urlparse.parse_qsl(sys.argv[2].replace('?',''))
 
 xbmcplugin.setContent(addon_handle, 'movies')
 
@@ -52,16 +51,16 @@ def listCategoryVideos(videos,currentPageNumber,foldername):
 		description = videoInfo['opis'].encode('utf-8')
 		li = xbmcgui.ListItem(name, iconImage=image)
 		li.setInfo( type="Video", infoLabels={ 
-															"Plot": description, 
-															"Duration": duration
-															})
+							"Plot": description, 
+							"Duration": duration
+							})
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 	pagesNum = videoNum / 25
 	if int(currentPageNumber) < pagesNum:
 		intCurrentPageNumber = int(currentPageNumber)
 		intCurrentPageNumber += 1
 		currentPageNumber = str(intCurrentPageNumber)
-		url = build_url({'mode': 'folder', 'foldername': foldername + '?' + currentPageNumber})
+		url = build_url({'mode': 'folder', 'foldername': foldername, 'pagenumber': currentPageNumber})
 		li = xbmcgui.ListItem('> Next Page', iconImage="DefaultFolder.png")
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)		
 	xbmcplugin.endOfDirectory(addon_handle)
@@ -117,11 +116,11 @@ elif mode[0] == 'folder':
 	
 	else:
 		foldername = args['foldername'][0]
-		params = args['foldername'][0].strip(foldername + '?')
-		if params == '':
+		if not 'pagenumber' in args:
 			currentPageNumber = '0'
 		else:
-			currentPageNumber = str(params)
-		
+			currentPageNumber = args['pagenumber'][0] 
 		videos =  categoryVideos(foldername.decode('utf-8'),currentPageNumber)
 		listCategoryVideos(videos,currentPageNumber,foldername.decode('utf-8'))
+		#xbmc.log("AAAAAAAAAAAAAAAAAAAAAA: %s" % params, xbmc.LOGNOTICE)
+
