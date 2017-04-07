@@ -17,11 +17,6 @@ api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
 def build_url(query):
     return base_url + '?' + urllib.urlencode(query)
 
-#http://stackoverflow.com/questions/6402812/how-to-convert-an-hmmss-time-string-to-seconds-in-python
-def get_sec(time_str):
-    h, m, s = time_str.split(':')
-    return int(h) * 3600 + int(m) * 60 + int(s)
-
 def categories():
 	requestCategories = requests.get(api_base_url + 'categories/?uid=' + api_key)
 	categories = requestCategories.json()
@@ -46,9 +41,11 @@ def search_videos():
         keyboard.setHeading('Pretraži CARNet Meduza')
 	keyboard.doModal()
 	if (keyboard.isConfirmed()):
-                query = keyboard.getText()
+		query = keyboard.getText()
 		if query is None or len(str(query)) == 0:
 			return
+	else:
+		return
 	request_search_videos = requests.get(api_base_url + 'videos/?query=' + query + '&order=3' + '&uid=' + api_key)
 	videos = request_search_videos.json()
 	return videos 
@@ -71,30 +68,33 @@ def recommended_videos():
 	return videos 
 
 def list_search_or_recommended_videos(videos):
-	for video in videos:
-		category_id = video['ID_kategorija']
-		name = video['naslov']
-		video_id = video['ID']
-		genre = video['kategorija']
-		duration = get_sec(video['trajanje'])
-		video_info = video_url_description(video_id)
-		try:
-			url = video_info['stream_url'].encode('utf-8') + '|User-Agent=Mozilla/5.0&Referer=https://meduza.carnet.hr'
-			description = video_info['opis'].encode('utf-8')
-		except KeyError:
-			url = ''
-			description = 'Video nije moguće reproducirati. Stari prijenos uživo?'
-			pass		
-		image = video['slika']
-		li = xbmcgui.ListItem(name, iconImage=image)
-		li.setInfo( type="Video", infoLabels={ 
+	if videos == None:
+		return
+	else:	
+		for video in videos:
+			category_id = video['ID_kategorija']
+			name = video['naslov']
+			video_id = video['ID']
+			genre = video['kategorija']
+			duration = reduce(lambda x, y: x*60+y, [int(i) for i in (video['trajanje'].replace(':',',')).split(',')])
+			video_info = video_url_description(video_id)
+			try:
+				url = video_info['stream_url'].encode('utf-8') + '|User-Agent=Mozilla/5.0&Referer=https://meduza.carnet.hr'
+				description = video_info['opis'].encode('utf-8')
+			except KeyError:
+				url = ''
+				description = 'Video nije moguće reproducirati. Stari prijenos uživo?'
+				pass		
+			image = video['slika']
+			li = xbmcgui.ListItem(name, iconImage=image)
+			li.setInfo( type="Video", infoLabels={ 
 							"Plot": description, 
 							"Genre": genre,
 							"Duration": duration
 								})
-		xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
-	xbmcplugin.endOfDirectory(addon_handle)
-
+			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
+		xbmcplugin.endOfDirectory(addon_handle)
+	
 def list_category_videos(videos,current_page_number,foldername):
 	if not videos:
 		li = xbmcgui.ListItem('Trenutno nema video u ovoj kategoriji...' , iconImage='DefaultVideo.png')
@@ -106,7 +106,7 @@ def list_category_videos(videos,current_page_number,foldername):
 			video_num = category_video_count(category_id)['count']
 			name = video['naslov']
 			video_id = video['ID']
-			duration = get_sec(video['trajanje'])
+			duration = reduce(lambda x, y: x*60+y, [int(i) for i in (video['trajanje'].replace(':',',')).split(',')])
 			video_info = video_url_description(video_id)
 			url = video_info['stream_url'] + '|User-Agent=Mozilla/5.0&Referer=https://meduza.carnet.hr'
 			image = video['slika']
