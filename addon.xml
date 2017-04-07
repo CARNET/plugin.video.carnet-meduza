@@ -13,13 +13,13 @@
     CARNet Meduza is a service for the distribution of multimedia content designed for educational and academic institutions and the individual users of the CARNet member institutions.   The name of the system, Meduza, comes from the Greek word medomai () = "to plan", "to have an idea", "to find". It was chosen to emphasise the efficiency of the future platform. The desired objective of the CARNet Meduza is its availability to CARNet users as a source of knowledge, information and educational vido content.
     </description>
     <disclaimer lang="en_gb"></disclaimer>
-    <language></language>
+    <language>hr</language>
     <platform>all</platform>
-    <license></license>
+    <license>GNU GENERAL PUBLIC LICENSE. Version 2, June 1991</license>
     <forum></forum>
-    <website>meduza.carnet.hr</website>
+    <website></website>
     <email>iptv@carnet.hr</email>
-    <source></source>
+    <source>https://github.com/scavara/plugin.video.carnet-meduza</source>
     <news></news>
     <assets>
         <icon>resources/icon.png</icon>
