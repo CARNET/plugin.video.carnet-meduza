@@ -28,10 +28,6 @@ msgctxt "#30102"
 msgid "AAI@EduHr Username"
 msgstr ""
 
-msgctxt "#30103"
-msgid "AAI@EduHr Password"
-msgstr ""
-
 msgctxt "#30104"
 msgid "Device Type"
 msgstr ""

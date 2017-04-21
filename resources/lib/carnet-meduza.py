@@ -3,10 +3,8 @@ import os, sys
 import urllib, urlparse, json
 import xbmcgui, xbmcplugin, xbmcaddon
 import requests
-
-if xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey') == '':
-	from register import device
-	ret_code = device.response_code 
+from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
+from register import device
 
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
@@ -16,6 +14,7 @@ xbmcplugin.setContent(addon_handle, 'videos')
 
 api_base_url = 'https://meduza.carnet.hr/index.php/api/'
 category_image_base_url = 'https://meduza.carnet.hr/uploads/images/categories/'
+# api_key == device_id from register (import) device == uid
 api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
 
 def build_url(query):
@@ -233,6 +232,4 @@ elif mode[0] == 'search':
 	list_search_or_recommended_videos(videos)
 
 elif mode[0] == 'settings':		
-	#https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
-	from modules import control
 	control.openSettings()
