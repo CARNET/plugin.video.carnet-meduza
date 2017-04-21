@@ -24,6 +24,18 @@ msgctxt "#30101"
 msgid "API key"
 msgstr ""
 
+msgctxt "#30102"
+msgid "AAI@EduHr Username"
+msgstr ""
+
+msgctxt "#30103"
+msgid "AAI@EduHr Password"
+msgstr ""
+
+msgctxt "#30104"
+msgid "Device Type"
+msgstr ""
+
 #: /xml/Home.xml /xml/DialogSeekBar.xml
 msgctxt "#31000"
 msgid "Now playing"

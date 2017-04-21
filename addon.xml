@@ -3,8 +3,10 @@
   <requires>
     <import addon="xbmc.python" version="2.19.0"/>
     <import addon="script.module.requests" version="2.12.4"/>
+    <import addon="script.module.mechanize" version="0.2.6"/>
+    <import addon="script.module.parsedom" version="2.5.2"/>
   </requires>
-  <extension point="xbmc.python.pluginsource" library="carnet-meduza.py">
+  <extension point="xbmc.python.pluginsource" library="resources/lib/carnet-meduza.py">
     <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">

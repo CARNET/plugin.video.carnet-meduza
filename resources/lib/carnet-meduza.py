@@ -4,6 +4,10 @@ import urllib, urlparse, json
 import xbmcgui, xbmcplugin, xbmcaddon
 import requests
 
+if xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey') == '':
+	from register import device
+	ret_code = device.response_code 
+
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
@@ -230,6 +234,5 @@ elif mode[0] == 'search':
 
 elif mode[0] == 'settings':		
 	#https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
-	from resources.lib.modules import control
+	from modules import control
 	control.openSettings()
-
