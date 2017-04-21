@@ -80,11 +80,13 @@ def check_reg(response):
 def get_pwd():
 	keyboard = xbmc.Keyboard()
 	keyboard.setHeading('AAI@EduHr lozinka')
+	keyboard.setHiddenInput(True) 
 	keyboard.doModal()
 	if (keyboard.isConfirmed()):
 		enter_pwd = keyboard.getText()
 		if enter_pwd is None or len(str(enter_pwd)) == 0:
 			control.infoDialog('Pogrešan unos. Pokušajte ponovo!')
+	del keyboard
 	return enter_pwd
 
 if api_key  == '':
