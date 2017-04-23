@@ -1,39 +1,58 @@
 # -*- coding: utf-8 -*-
-import os, sys, string, random
+import os, sys, string, random, platform
 import urllib, urlparse, json
 import requests
 import xbmc, xbmcaddon
 import mechanize
 from mechanize import Browser
 from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
+from classes.memstorage import Storage
+from classes.memstorage import MemStorage #tnx/credit: http://romanvm.github.io/script.module.simpleplugin/storage.html
 
-# generate device id and get username/apikey from settings
-device_id = ''.join(random.choice(string.ascii_letters+string.digits) for x in range(140))
+#MemStorage does not allow to modify mutable objects in-place. You need to assign them to variables first, modify and then store them back to a MemStorage instance.
+tmp_store = MemStorage('ts')
+
+# get username/apikey from settings
 aai_username = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('aai_username')
 api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
+
+def gen_key():
+	# ex: Linux
+	os_name = platform.system()
+	# ex: Kodi (some name)
+	kodi_name = xbmc.getInfoLabel('System.FriendlyName')
+	# generate 140 char device id (a.k.a. api key)
+	rnd_str = ''.join(random.choice(string.ascii_letters+string.digits) for x in range(140))
+	combo_str = kodi_name + os_name + rnd_str
+	# remove non alpha-numeric chars and truncate to 140 
+	uniq_key = ''.join(char for char in combo_str if char.isalnum())[:140]
+	return uniq_key
+
+def store_key():
+	#gen/set/get uniq key == device_id == api_key
+	#get addon full path
+	plugin_path = xbmcaddon.Addon().getAddonInfo('path').decode('utf-8')
+	# Create a storage object
+	with Storage(plugin_path) as key_store: 
+		if not key_store:
+			uniq_key = gen_key() # gen key only if key_store empty (once)
+			key_store['uniq_key'] = uniq_key # store object
+		key = key_store['uniq_key']
+	return key
 
 # register device
 def dev_reg():
 	# get user info from settings
 	aai_password = get_pwd()
 	api_base_url = 'https://meduza.carnet.hr/index.php/login/mobile/?device='
-	REQUEST_HEADER  = {'Host': 'meduza.carnet.hr',
-		'Connection': 'keep-alive',
-		'Cache-Control': 'max-age=0',
-		'Upgrade-Insecure-Requests': '1',
-		'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
-		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-		'Accept-Encoding': 'gzip,deflate',
-		'Accept-Language': 'en-US,en;q=0.5'}
-
 	device_type_name = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('device_type')
 	device_type_dict = {'Tablet':'2', 'Smartphone':'3', 'SmartTV':'4'}
 	# get number corresponding to device type from settings
 	device_type_num = device_type_dict[device_type_name]
-
+	device_id = store_key()
 	# request target resource, discover IdP and redirect to SSO service
 	request_url = api_base_url + device_type_num + '&uid=' + device_id
-	r = requests.Session().get(request_url, params=REQUEST_HEADER)
+	r = requests.get(request_url)
 	redirect_cookies = r.cookies
 
 	# identify the user from requested SSO service (login)
@@ -49,29 +68,30 @@ def dev_reg():
 	br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
 	# open login page
 	br.open(form_open)
-	br.select_form(name="f")
-	br["username"] = aai_username 
-	br["password"] = aai_password
-	br.method = "POST"
+	br.select_form(name='f')
+	br['username'] = aai_username 
+	br['password'] = aai_password
+	br.method = 'POST'
 	br.submit()
 
 	# submit using responded XHTML form, redirect to requested target resource and get response code
 	submit = br.open(form_open, timeout=5.0)
 	submit.geturl()
 	br.select_form(nr=0)
-	br.method = "POST"
+	br.method = 'POST'
 	response = br.submit()
 	response_url = response.geturl()
-	return response_url
+	return (response_url, device_id)
 
 # check device registration status
-def check_reg(response):
+def check_reg(response, device_id):
 	response_parsed = urlparse.urlparse(response)
 	response_code = urlparse.parse_qs(response_parsed.query)['status'][0]
 	# 200 means that 'device' was successfully registered with SP and device UID can be stored in the settings
 	if response_code == '200':
 		xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',device_id)
-		control.infoDialog("Uređaj uspješno registiran")
+		user_info(device_id)
+		control.infoDialog('Uređaj uspješno registiran')
 	else: 
 		ret_codes = {'100':'Nedostaje UID parametar', '300':'Korisnički račun je istekao', '400':'Neuspješna registracija', '401':'Uređaj  je već registriran'}
 		ret_message = ret_codes[response_code]
@@ -89,10 +109,39 @@ def get_pwd():
 	del keyboard
 	return enter_pwd
 
+def pre_run():
+	# request target resource, discover IdP and redirect to SSO service
+	request_url = 'https://meduza.carnet.hr/index.php/api/registered/?uid=' + api_key
+	r = requests.get(request_url)
+	registered_status = r.json()['code']
+	if registered_status == 200:
+		control.infoDialog(r.json()['message'] + ' - looks good!')
+	else:
+		control.infoDialog('Pogreška. Provjerite postavke ili pokušajte ponovo!')
+
+# get user info and populate the settings.xml
+def user_info(api_key):
+	# request target resource, discover IdP and redirect to SSO service
+	request_url = 'https://meduza.carnet.hr/index.php/api/user/?uid=' + api_key
+	r = requests.get(request_url)
+	user_details = r.json()
+	first_name = user_details['ime'].encode('utf-8')
+	last_name = user_details['prezime'].encode('utf-8')
+	reg_date = user_details['datum_registracija'].encode('utf-8')
+	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('first_name',first_name)
+	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('last_name',last_name)
+	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('reg_date',reg_date)
+
 if api_key  == '':
+	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',store_key())
+	# if aai_username missing open settings, otherwise  start device registration
 	if aai_username == '':
+		control.infoDialog('Podesite vaš AAI@EduHr Username!')	
 		control.openSettings()
 	else:
-		reg_response = dev_reg()
-		check_reg(reg_response)
-
+		reg_response, device_id = dev_reg()
+		check_reg(reg_response, device_id)
+#check if device is registered (pre_run) only once
+elif not tmp_store:
+	pre_run()
+	tmp_store['run_once'] = 1

@@ -9,7 +9,7 @@ from register import device
 base_url = sys.argv[0]
 addon_handle = int(sys.argv[1])
 args = urlparse.parse_qs(sys.argv[2][1:])
-
+#set as video addon
 xbmcplugin.setContent(addon_handle, 'videos')
 
 api_base_url = 'https://meduza.carnet.hr/index.php/api/'
@@ -49,7 +49,10 @@ def search_videos():
 			return
 	else:
 		return
-	request_search_videos = requests.get(api_base_url + 'videos/?query=' + query + '&order=3' + '&uid=' + api_key)
+	sort_options = {'Upload date':'1', 'View count':'2', 'Title':'3', 'Duration':'4'}
+	sort_videos = sort_options[xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('sort_videos')]
+	asc_order = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('asc_order')	
+	request_search_videos = requests.get(api_base_url + 'videos/?query=' + query + '&order=' + str(sort_videos) + '&uid=' + api_key + '&asc=' + str(int(bool(asc_order))))
 	videos = request_search_videos.json()
 	return videos 
 
@@ -64,9 +67,9 @@ def video_url_description(video_id):
 	video_url_description = dict((k, request_video_url_description[k]) for k in extract_keys if k in request_video_url_description)
 	return video_url_description
 
-#TODO: add to settings option 'number of recommends' 
 def recommended_videos():
-	request_recommended_videos = requests.get(api_base_url + 'recommended/?number=20&uid=' + api_key)
+	num_recommends = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('num_recommends')
+	request_recommended_videos = requests.get(api_base_url + 'recommended/?number=' + str(num_recommends) + '&uid=' + api_key)
 	videos = request_recommended_videos.json()
 	return videos 
 
