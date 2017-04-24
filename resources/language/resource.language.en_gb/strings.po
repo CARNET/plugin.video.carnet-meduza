@@ -46,7 +46,7 @@ msgstr ""
 
 msgctxt "#30113"
 msgid "Ascending Order"
-msgstr
+msgstr ""
 
 msgctxt "#30120"
 msgid "User Info"
