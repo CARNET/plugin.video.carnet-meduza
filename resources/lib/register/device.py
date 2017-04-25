@@ -14,7 +14,7 @@ tmp_store = MemStorage('ts')
 
 # get username/apikey from settings
 aai_username = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('aai_username')
-api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
+#api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
 
 def gen_key():
 	# ex: Linux
@@ -37,11 +37,13 @@ def store_key():
 		if not key_store:
 			uniq_key = gen_key() # gen key only if key_store empty (once)
 			key_store['uniq_key'] = uniq_key # store object
+			key_store['reg_dev_status'] = 'not_reg'
 		key = key_store['uniq_key']
-	return key
+		reg_dev_status = key_store['reg_dev_status']
+	return (key, reg_dev_status)
 
 # register device
-def dev_reg():
+def dev_reg(device_id):
 	# get user info from settings
 	aai_password = get_pwd()
 	api_base_url = 'https://meduza.carnet.hr/index.php/login/mobile/?device='
@@ -49,7 +51,6 @@ def dev_reg():
 	device_type_dict = {'Tablet':'2', 'Smartphone':'3', 'SmartTV':'4'}
 	# get number corresponding to device type from settings
 	device_type_num = device_type_dict[device_type_name]
-	device_id = store_key()
 	# request target resource, discover IdP and redirect to SSO service
 	request_url = api_base_url + device_type_num + '&uid=' + device_id
 	r = requests.get(request_url)
@@ -81,7 +82,7 @@ def dev_reg():
 	br.method = 'POST'
 	response = br.submit()
 	response_url = response.geturl()
-	return (response_url, device_id)
+	return response_url
 
 # check device registration status
 def check_reg(response, device_id):
@@ -92,6 +93,11 @@ def check_reg(response, device_id):
 		xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',device_id)
 		user_info(device_id)
 		control.infoDialog('Uređaj uspješno registiran')
+		#get addon full path
+		plugin_path = xbmcaddon.Addon().getAddonInfo('path').decode('utf-8')
+		# Create a storage object
+		with Storage(plugin_path) as key_store: 
+			key_store['reg_dev_status'] = 'is_reg'
 	else: 
 		ret_codes = {'100':'Nedostaje UID parametar', '300':'Korisnički račun je istekao', '400':'Neuspješna registracija', '401':'Uređaj  je već registriran'}
 		ret_message = ret_codes[response_code]
@@ -132,16 +138,21 @@ def user_info(api_key):
 	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('last_name',last_name)
 	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('reg_date',reg_date)
 
-if api_key  == '':
-	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',store_key())
-	# if aai_username missing open settings, otherwise  start device registration
-	if aai_username == '':
-		control.infoDialog('Podesite vaš AAI@EduHr Username!')	
-		control.openSettings()
-	else:
-		reg_response, device_id = dev_reg()
-		check_reg(reg_response, device_id)
+api_key, dev_reg_status = store_key()
+xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',api_key)
+
+#if api_key  == '':
+		# if aai_username missing open settings, otherwise  start device registration
+if aai_username == '':
+	control.infoDialog('Podesite vaš AAI@EduHr Username!')	
+	control.openSettings()
+
+elif dev_reg_status == 'not_reg':
+	reg_response = dev_reg(api_key)
+	check_reg(reg_response, api_key)
+
 #check if device is registered (pre_run) only once
 elif not tmp_store:
 	pre_run()
 	tmp_store['run_once'] = 1
+
