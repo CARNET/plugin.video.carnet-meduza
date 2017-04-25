@@ -141,18 +141,16 @@ def user_info(api_key):
 api_key, dev_reg_status = store_key()
 xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',api_key)
 
-#if api_key  == '':
-		# if aai_username missing open settings, otherwise  start device registration
-if aai_username == '':
+# if aai_username missing open settings, otherwise  start device registration
+if not aai_username and dev_reg_status == 'not_reg':
 	control.infoDialog('Podesite vaš AAI@EduHr Username!')	
 	control.openSettings()
-
 elif dev_reg_status == 'not_reg':
 	reg_response = dev_reg(api_key)
 	check_reg(reg_response, api_key)
-
 #check if device is registered (pre_run) only once
 elif not tmp_store:
 	pre_run()
 	tmp_store['run_once'] = 1
-
+else:
+	pass
