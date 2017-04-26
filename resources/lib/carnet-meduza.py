@@ -6,17 +6,6 @@ import requests
 from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
 from register import device
 
-base_url = sys.argv[0]
-addon_handle = int(sys.argv[1])
-args = urlparse.parse_qs(sys.argv[2][1:])
-#set as video addon
-xbmcplugin.setContent(addon_handle, 'videos')
-
-api_base_url = 'https://meduza.carnet.hr/index.php/api/'
-category_image_base_url = 'https://meduza.carnet.hr/uploads/images/categories/'
-# api_key == device_id from register (import) device == uid
-api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
-
 def build_url(query):
     return base_url + '?' + urllib.urlencode(query)
 
@@ -40,8 +29,9 @@ def category_videos(name,current_page_number):
         return videos 
 
 def search_videos():
+        search_heading = addon.getLocalizedString(30206)
 	keyboard = xbmc.Keyboard()
-        keyboard.setHeading('Pretraži CARNet Meduza')
+        keyboard.setHeading(search_heading)
 	keyboard.doModal()
 	if (keyboard.isConfirmed()):
 		query = keyboard.getText()
@@ -89,7 +79,7 @@ def list_search_or_recommended_videos(videos):
 				description = video_info['opis'].encode('utf-8')
 			except KeyError:
 				url = ''
-				description = 'Video nije moguće reproducirati. Stari prijenos uživo?'
+				description = addon.getLocalizedString(30207)
 				pass		
 			image = video['slika']
 			li = xbmcgui.ListItem(name, iconImage=image)
@@ -103,7 +93,8 @@ def list_search_or_recommended_videos(videos):
 	
 def list_category_videos(videos,current_page_number,foldername):
 	if not videos:
-		li = xbmcgui.ListItem('Trenutno nema video u ovoj kategoriji...' , iconImage='DefaultVideo.png')
+		li_translate = addon.getLocalizedString(30208)
+		li = xbmcgui.ListItem(li_translate, iconImage='DefaultVideo.png')
 		xbmcplugin.addDirectoryItem(handle=addon_handle, url='', listitem=li)
 		xbmcplugin.endOfDirectory(addon_handle)
 	else:
@@ -156,37 +147,55 @@ def start_channel(channel_id,channel_video_count):
         player.play(item=playlist,startpos=channel_index)
 	player.seekTime(channel_offset)
 
+base_url = sys.argv[0]
+addon_handle = int(sys.argv[1])
+args = urlparse.parse_qs(sys.argv[2][1:])
+#set as video addon
+xbmcplugin.setContent(addon_handle, 'videos')
+
+addon=xbmcaddon.Addon('plugin.video.carnet-meduza')
+api_base_url = 'https://meduza.carnet.hr/index.php/api/'
+category_image_base_url = 'https://meduza.carnet.hr/uploads/images/categories/'
+# api_key == device_id from register (import) device == uid
+api_key = addon.getSetting('apikey')
+
 mode = args.get('mode', None)
 
+dir_recommends = addon.getLocalizedString(30201)
+dir_categories = addon.getLocalizedString(30202)
+dir_channels = addon.getLocalizedString(30203)
+dir_search = addon.getLocalizedString(30204)
+dir_settings = addon.getLocalizedString(30205)
+
 if mode is None:
-    url = build_url({'mode': 'folder', 'foldername': 'Preporuke'})
-    li = xbmcgui.ListItem('Preporuke', iconImage='DefaultVideo.png')
+    url = build_url({'mode': 'folder', 'foldername': dir_recommends})
+    li = xbmcgui.ListItem(dir_recommends, iconImage='DefaultVideo.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    url = build_url({'mode': 'folder', 'foldername': 'Kategorije'})
-    li = xbmcgui.ListItem('Kategorije', iconImage='DefaultAddonVideo.png')
+    url = build_url({'mode': 'folder', 'foldername': dir_categories})
+    li = xbmcgui.ListItem(dir_categories, iconImage='DefaultAddonVideo.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    url = build_url({'mode': 'folder', 'foldername': 'Kanali'})
-    li = xbmcgui.ListItem('Kanali', iconImage='DefaultAddonTvInfo.png')
+    url = build_url({'mode': 'folder', 'foldername': dir_channels})
+    li = xbmcgui.ListItem(dir_channels, iconImage='DefaultAddonTvInfo.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    url = build_url({'mode': 'search', 'foldername': 'Pretraga'})
-    li = xbmcgui.ListItem('Pretraga', iconImage='DefaultAddonsSearch.png')
+    url = build_url({'mode': 'search', 'foldername': dir_search})
+    li = xbmcgui.ListItem(dir_search, iconImage='DefaultAddonsSearch.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 	
-    url = build_url({'mode': 'settings', 'foldername': 'Postavke'})
-    li = xbmcgui.ListItem('Postavke', iconImage='DefaultAddonProgram.png')
+    url = build_url({'mode': 'settings', 'foldername': dir_settings})
+    li = xbmcgui.ListItem(dir_settings, iconImage='DefaultAddonProgram.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 	
     xbmcplugin.endOfDirectory(addon_handle)
 
 elif mode[0] == 'folder':
-	if args['foldername'][0] == 'Preporuke':
+	if args['foldername'][0] == dir_recommends:
 		videos =  recommended_videos()
 		list_search_or_recommended_videos(videos)
 
-	elif args['foldername'][0] == 'Kategorije':
+	elif args['foldername'][0] == dir_categories:
 		categories = categories()
 		categoryGen = (category for category in categories if category['naziv'] != 'YouTube')
 		for category in categoryGen:
@@ -197,7 +206,7 @@ elif mode[0] == 'folder':
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 		xbmcplugin.endOfDirectory(addon_handle)
 
-	elif args['foldername'][0] == 'Kanali':
+	elif args['foldername'][0] == dir_channels:
 		channels = channels()
 		channelGen = (channel for channel in channels if channel['naziv'] != 'UNWANTED')
 		for channel in channelGen:
@@ -230,9 +239,13 @@ elif mode[0] == 'folder':
 			channel_video_count = channel[0]['emisije'].encode('utf-8')
 			start_channel(channel_id,channel_video_count)
 
-elif mode[0] == 'search':
+elif mode[0] == dir_search.lower():
 	videos = search_videos()
 	list_search_or_recommended_videos(videos)
 
-elif mode[0] == 'settings':		
+elif mode[0] == dir_settings.lower():		
 	control.openSettings()
+
+else:
+	pass
+

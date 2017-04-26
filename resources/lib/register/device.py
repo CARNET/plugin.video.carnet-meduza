@@ -9,21 +9,12 @@ from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/m
 from classes.memstorage import Storage
 from classes.memstorage import MemStorage #tnx/credit: http://romanvm.github.io/script.module.simpleplugin/storage.html
 
-#MemStorage does not allow to modify mutable objects in-place. You need to assign them to variables first, modify and then store them back to a MemStorage instance.
-tmp_store = MemStorage('ts')
-
-# get username/apikey from settings
-aai_username = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('aai_username')
-#api_key = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('apikey')
-
 def gen_key():
 	# ex: Linux
 	os_name = platform.system()
-	# ex: Kodi (some name)
-	kodi_name = xbmc.getInfoLabel('System.FriendlyName')
 	# generate 140 char device id (a.k.a. api key)
 	rnd_str = ''.join(random.choice(string.ascii_letters+string.digits) for x in range(140))
-	combo_str = kodi_name + os_name + rnd_str
+	combo_str = 'kodi' + os_name + rnd_str
 	# remove non alpha-numeric chars and truncate to 140 
 	uniq_key = ''.join(char for char in combo_str if char.isalnum())[:140]
 	return uniq_key
@@ -92,38 +83,43 @@ def check_reg(response, device_id):
 	if response_code == '200':
 		xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',device_id)
 		user_info(device_id)
-		control.infoDialog('Uređaj uspješno registiran')
+		info_dialog_msg = addon.getLocalizedString(30209) 
+		control.infoDialog(info_dialog_msg)
 		#get addon full path
 		plugin_path = xbmcaddon.Addon().getAddonInfo('path').decode('utf-8')
 		# Create a storage object
 		with Storage(plugin_path) as key_store: 
 			key_store['reg_dev_status'] = 'is_reg'
 	else: 
-		ret_codes = {'100':'Nedostaje UID parametar', '300':'Korisnički račun je istekao', '400':'Neuspješna registracija', '401':'Uređaj  je već registriran'}
-		ret_message = ret_codes[response_code]
+		ret_codes = {'100':30215, '300':30216, '400':30217, '401':30218}
+		ret_message = addon.getLocalizedString(ret_codes[response_code])
 		control.infoDialog(ret_message)
 	
 def get_pwd():
+	heading_msg = addon.getLocalizedString(30210) 
 	keyboard = xbmc.Keyboard()
-	keyboard.setHeading('AAI@EduHr lozinka')
+	keyboard.setHeading(heading_msg)
 	keyboard.setHiddenInput(True) 
 	keyboard.doModal()
 	if (keyboard.isConfirmed()):
 		enter_pwd = keyboard.getText()
 		if enter_pwd is None or len(str(enter_pwd)) == 0:
-			control.infoDialog('Pogrešan unos. Pokušajte ponovo!')
+			info_dialog_msg = addon.getLocalizedString(30211)
+			control.infoDialog(info_dialog_msg)
 	del keyboard
 	return enter_pwd
-
+# pre run check (make api requests for content) 
 def pre_run():
 	# request target resource, discover IdP and redirect to SSO service
 	request_url = 'https://meduza.carnet.hr/index.php/api/registered/?uid=' + api_key
 	r = requests.get(request_url)
 	registered_status = r.json()['code']
 	if registered_status == 200:
-		control.infoDialog(r.json()['message'] + ' - looks good!')
+		success_msg = addon.getLocalizedString(30212)
+		control.infoDialog(r.json()['message'] + success_msg)
 	else:
-		control.infoDialog('Pogreška. Provjerite postavke ili pokušajte ponovo!')
+		error_msg = addon.getLocalizedString(30213)
+		control.infoDialog(error_msg)
 
 # get user info and populate the settings.xml
 def user_info(api_key):
@@ -134,23 +130,34 @@ def user_info(api_key):
 	first_name = user_details['ime'].encode('utf-8')
 	last_name = user_details['prezime'].encode('utf-8')
 	reg_date = user_details['datum_registracija'].encode('utf-8')
-	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('first_name',first_name)
-	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('last_name',last_name)
-	xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('reg_date',reg_date)
+	addon.setSetting('first_name',first_name)
+	addon.setSetting('last_name',last_name)
+	addon.setSetting('reg_date',reg_date)
+
+addon=xbmcaddon.Addon('plugin.video.carnet-meduza')
+
+#MemStorage does not allow to modify mutable objects in-place. You need to assign them to variables first, modify and then store them back to a MemStorage instance.
+tmp_store = MemStorage('ts')
+
+# get username/apikey from settings
+aai_username = addon.getSetting('aai_username')
 
 api_key, dev_reg_status = store_key()
-xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',api_key)
+addon.setSetting('apikey',api_key)
 
-# if aai_username missing open settings, otherwise  start device registration
+#if api_key  == '':
+		# if aai_username missing open settings, otherwise  start device registration
 if not aai_username and dev_reg_status == 'not_reg':
-	control.infoDialog('Podesite vaš AAI@EduHr Username!')	
+	info_dialog_msg = addon.getLocalizedString(30214)
+	control.infoDialog(info_dialog_msg)	
 	control.openSettings()
+
 elif dev_reg_status == 'not_reg':
 	reg_response = dev_reg(api_key)
 	check_reg(reg_response, api_key)
+
 #check if device is registered (pre_run) only once
 elif not tmp_store:
 	pre_run()
 	tmp_store['run_once'] = 1
-else:
-	pass
+

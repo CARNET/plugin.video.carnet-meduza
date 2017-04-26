@@ -64,7 +64,80 @@ msgctxt "#30123"
 msgid "Registered with CM since"
 msgstr ""
 
-#: /xml/Home.xml /xml/DialogSeekBar.xml
+#: py's string translations
+msgctxt "#30201"
+msgid "Recommended"
+msgstr ""
+
+msgctxt "#30202"
+msgid "Categories"
+msgstr ""
+
+msgctxt "#30203"
+msgid "Channels"
+msgstr ""
+
+msgctxt "#30204"
+msgid "Search"
+msgstr ""
+
+msgctxt "#30205"
+msgid "Settings"
+msgstr ""
+
+msgctxt "#30206"
+msgid "Search CARNet Meduza"
+msgstr ""
+
+msgctxt "#30207"
+msgid "Unable to play video. Inactive live stream?"
+msgstr ""
+
+msgctxt "#30208"
+msgid "There is no videos in this category at the moment."
+msgstr ""
+
+msgctxt "#30209"
+msgid "Device registered successfully."
+msgstr ""
+
+msgctxt "#30210"
+msgid "AAI@EduHr password:"
+msgstr ""
+
+msgctxt "#30211"
+msgid "Wrong entry. Please try again!"
+msgstr ""
+
+msgctxt "#30212"
+msgid " - Your are good to go!"
+msgstr ""
+
+msgctxt "#30213"
+msgid "Error! Please check your settings or try again latter."
+msgstr ""
+
+msgctxt "#30214"
+msgid "Set your AAI@EduHr Username!"
+msgstr ""
+
+msgctxt "#30215"
+msgid "Error: UID parameter is missing."
+msgstr ""
+
+msgctxt "#30216"
+msgid "Error: User account has expired."
+msgstr ""
+
+msgctxt "#30217"
+msgid "Error: registration was unsuccessful."
+msgstr ""
+
+msgctxt "#30218"
+msgid "Device already registered."
+msgstr ""
+
+#: /xml/Home.xm/DialogSeekBar.xml
 msgctxt "#31000"
 msgid "Now playing"
 msgstr ""
