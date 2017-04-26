@@ -21,11 +21,13 @@ def gen_key():
 
 def store_key():
 	#gen/set/get uniq key == device_id == api_key
-	#get addon full path
-	plugin_path = xbmcaddon.Addon().getAddonInfo('path').decode('utf-8')
+	#get addon userdata special:// and then translate to full path
+	userdata_path_special = xbmcaddon.Addon().getAddonInfo('profile').decode('utf-8')
+	userdata_path = xbmc.translatePath(userdata_path_special)
 	# Create a storage object
-	with Storage(plugin_path) as key_store: 
+	with Storage(userdata_path) as key_store: 
 		if not key_store:
+			os.mkdir(userdata_path) 
 			uniq_key = gen_key() # gen key only if key_store empty (once)
 			key_store['uniq_key'] = uniq_key # store object
 			key_store['reg_dev_status'] = 'not_reg'
@@ -81,14 +83,15 @@ def check_reg(response, device_id):
 	response_code = urlparse.parse_qs(response_parsed.query)['status'][0]
 	# 200 means that 'device' was successfully registered with SP and device UID can be stored in the settings
 	if response_code == '200':
-		xbmcaddon.Addon('plugin.video.carnet-meduza').setSetting('apikey',device_id)
+		addon.setSetting('apikey',device_id)
 		user_info(device_id)
 		info_dialog_msg = addon.getLocalizedString(30209) 
 		control.infoDialog(info_dialog_msg)
-		#get addon full path
-		plugin_path = xbmcaddon.Addon().getAddonInfo('path').decode('utf-8')
+		#get addon userdata special:// and then translate to full path
+		userdata_path_special = xbmcaddon.Addon().getAddonInfo('profile').decode('utf-8')
+		userdata_path = xbmc.translatePath(userdata_path_special)
 		# Create a storage object
-		with Storage(plugin_path) as key_store: 
+		with Storage(userdata_path) as key_store: 
 			key_store['reg_dev_status'] = 'is_reg'
 	else: 
 		ret_codes = {'100':30215, '300':30216, '400':30217, '401':30218}
