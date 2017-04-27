@@ -44,9 +44,8 @@ def search_videos():
 			return
 	else:
 		return
-	sort_options = {'Upload date':'1', 'View count':'2', 'Title':'3', 'Duration':'4'}
-	sort_videos = sort_options[xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('sort_videos')]
-	asc_order = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('asc_order')	
+	sort_videos = addon.getSetting('sort_videos')
+	asc_order = addon.getSetting('asc_order')	
 	request_search_videos = requests.get(api_base_url + 'videos/?query=' + query + '&order=' + str(sort_videos) + '&uid=' + api_key + '&asc=' + str(int(bool(asc_order))))
 	videos = request_search_videos.json()
 	return videos 

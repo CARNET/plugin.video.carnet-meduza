@@ -25,11 +25,23 @@ msgid "API key"
 msgstr ""
 
 msgctxt "#30102"
-msgid "AAI@EduHr Username *"
+msgid "AAI@EduHr Username"
 msgstr ""
 
 msgctxt "#30104"
 msgid "Device Type"
+msgstr ""
+
+msgctxt "#30105"
+msgid "Tablet"
+msgstr ""
+
+msgctxt "#30106"
+msgid "Smart Phone"
+msgstr ""
+
+msgctxt "#30107"
+msgid "Smart TV"
 msgstr ""
 
 msgctxt "#30110"
@@ -46,6 +58,22 @@ msgstr ""
 
 msgctxt "#30113"
 msgid "Ascending Order"
+msgstr ""
+
+msgctxt "#30114"
+msgid "Upload date"
+msgstr ""
+
+msgctxt "#30115"
+msgid "View count"
+msgstr ""
+
+msgctxt "#30116"
+msgid "Title"
+msgstr ""
+
+msgctxt "#30117"
+msgid "Duration"
 msgstr ""
 
 msgctxt "#30120"

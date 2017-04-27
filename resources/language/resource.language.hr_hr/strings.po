@@ -32,6 +32,18 @@ msgctxt "#30104"
 msgid "Device Type"
 msgstr "Tip uređaja"
 
+msgctxt "#30105"
+msgid "Tablet"
+msgstr ""
+
+msgctxt "#30106"
+msgid "Smart Phone"
+msgstr "Pametni telefon"
+
+msgctxt "#30107"
+msgid "Smart TV"
+msgstr ""
+
 msgctxt "#30110"
 msgid "General"
 msgstr "Opće postavke"
@@ -47,6 +59,22 @@ msgstr "Sortiraj po"
 msgctxt "#30113"
 msgid "Ascending Order"
 msgstr "Uzlazno sortiranje"
+
+msgctxt "#30114"
+msgid "Upload date"
+msgstr "Datum postavljanja"
+
+msgctxt "#30115"
+msgid "View count"
+msgstr "Broj pregleda"
+
+msgctxt "#30116"
+msgid "Title"
+msgstr "Naziv"
+
+msgctxt "#30117"
+msgid "Duration"
+msgstr "Trajanje"
 
 msgctxt "#30120"
 msgid "User Info"

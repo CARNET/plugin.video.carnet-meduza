@@ -10,6 +10,7 @@ from classes.memstorage import Storage
 from classes.memstorage import MemStorage #tnx/credit: http://romanvm.github.io/script.module.simpleplugin/storage.html
 
 def gen_key():
+	"""Returns unique 140 char long string that emulates device id - api key"""
 	# ex: Linux
 	os_name = platform.system()
 	# generate 140 char device id (a.k.a. api key)
@@ -20,14 +21,19 @@ def gen_key():
 	return uniq_key
 
 def store_key():
+	"""Persistently keep api key and registration status (not/is) in userdata/storage.pcl file
+	and return stored key and the status"""
 	#gen/set/get uniq key == device_id == api_key
 	#get addon userdata special:// and then translate to full path
 	userdata_path_special = xbmcaddon.Addon().getAddonInfo('profile').decode('utf-8')
 	userdata_path = xbmc.translatePath(userdata_path_special)
 	# Create a storage object
 	with Storage(userdata_path) as key_store: 
+		#check if file used as key storage exists
 		if not key_store:
-			os.mkdir(userdata_path) 
+			#handle if file is deleted but not the userdata dir
+			if not os.path.exists(userdata_path):
+				os.mkdir(userdata_path) 
 			uniq_key = gen_key() # gen key only if key_store empty (once)
 			key_store['uniq_key'] = uniq_key # store object
 			key_store['reg_dev_status'] = 'not_reg'
@@ -37,15 +43,16 @@ def store_key():
 
 # register device
 def dev_reg(device_id):
+	"""Returns the url that server responded with after registration attempt"""
 	# get user info from settings
 	aai_password = get_pwd()
 	api_base_url = 'https://meduza.carnet.hr/index.php/login/mobile/?device='
-	device_type_name = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('device_type')
-	device_type_dict = {'Tablet':'2', 'Smartphone':'3', 'SmartTV':'4'}
+	# for some reason, it start at 2 {'Tablet':'2', 'Smartphone':'3', 'SmartTV':'4'}
+	device_type = int(addon.getSetting('device_type')) + 2
 	# get number corresponding to device type from settings
-	device_type_num = device_type_dict[device_type_name]
+	#device_type_num = device_type_dict[device_type_name]
 	# request target resource, discover IdP and redirect to SSO service
-	request_url = api_base_url + device_type_num + '&uid=' + device_id
+	request_url = api_base_url + str(device_type) + '&uid=' + device_id
 	r = requests.get(request_url)
 	redirect_cookies = r.cookies
 
@@ -78,6 +85,7 @@ def dev_reg(device_id):
 	return response_url
 
 # check device registration status
+"""Takes response from reg_dev, along with api key"""
 def check_reg(response, device_id):
 	response_parsed = urlparse.urlparse(response)
 	response_code = urlparse.parse_qs(response_parsed.query)['status'][0]
@@ -99,6 +107,7 @@ def check_reg(response, device_id):
 		control.infoDialog(ret_message)
 	
 def get_pwd():
+	"""Storing SSO password is not best way to go, so just get the it, when needed. Returns entered password."""
 	heading_msg = addon.getLocalizedString(30210) 
 	keyboard = xbmc.Keyboard()
 	keyboard.setHeading(heading_msg)
@@ -111,8 +120,10 @@ def get_pwd():
 			control.infoDialog(info_dialog_msg)
 	del keyboard
 	return enter_pwd
+
 # pre run check (make api requests for content) 
 def pre_run():
+	"""When addon is started, checks if registration status is valid."""
 	# request target resource, discover IdP and redirect to SSO service
 	request_url = 'https://meduza.carnet.hr/index.php/api/registered/?uid=' + api_key
 	r = requests.get(request_url)
@@ -124,8 +135,10 @@ def pre_run():
 		error_msg = addon.getLocalizedString(30213)
 		control.infoDialog(error_msg)
 
+
 # get user info and populate the settings.xml
 def user_info(api_key):
+	"""Once more, it takes api key, gets user info from the CM server and stores it to settings."""
 	# request target resource, discover IdP and redirect to SSO service
 	request_url = 'https://meduza.carnet.hr/index.php/api/user/?uid=' + api_key
 	r = requests.get(request_url)
