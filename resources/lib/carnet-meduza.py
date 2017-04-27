@@ -7,19 +7,23 @@ from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/m
 from register import device
 
 def build_url(query):
-    return base_url + '?' + urllib.urlencode(query)
+	"""Returns builds query url."""
+	return base_url + '?' + urllib.urlencode(query)
 
 def categories():
-	requestCategories = requests.get(api_base_url + 'categories/?uid=' + api_key)
+	"""Returns list of categories""" 
+	requestCategories = requests.get(api_base_url + 'categories/?lang=en&uid=' + api_key)
 	categories = requestCategories.json()
 	return categories
 
 def channels():
+	"""Returns list of channels"""
 	requestChannels = requests.get(api_base_url + 'channels/?uid=' + api_key)
 	channels = requestChannels.json()
 	return channels
 
 def category_videos(name,current_page_number):
+	"""Returns list of vidoes (25 per page) inside selected category"""
 	for category in categories:
 		if category['naziv'] == name:
 			skip = int(current_page_number) * 25
@@ -29,6 +33,7 @@ def category_videos(name,current_page_number):
         return videos 
 
 def search_videos():
+	"""Returns search results vidoes"""
         search_heading = addon.getLocalizedString(30206)
 	keyboard = xbmc.Keyboard()
         keyboard.setHeading(search_heading)
@@ -47,17 +52,20 @@ def search_videos():
 	return videos 
 
 def category_video_count(category_id):
+	"""Returns total number of videos inside the category"""
 	request_category_video_count = requests.get(api_base_url + 'category/count/?id=' + category_id + '&uid=' + api_key)
 	category_video_count = request_category_video_count.json()
 	return category_video_count
 
 def video_url_description(video_id):
+	"""Returns video description"""
 	request_video_url_description = requests.get(api_base_url + 'video/?id=' + video_id + '&uid=' + api_key).json()
 	extract_keys = ['stream_url', 'opis']
 	video_url_description = dict((k, request_video_url_description[k]) for k in extract_keys if k in request_video_url_description)
 	return video_url_description
 
 def recommended_videos():
+	"""Returns list of recommended videos. The number of videos can be defined inside settings. Default is 20."""
 	num_recommends = xbmcaddon.Addon('plugin.video.carnet-meduza').getSetting('num_recommends')
 	request_recommended_videos = requests.get(api_base_url + 'recommended/?number=' + str(num_recommends) + '&uid=' + api_key)
 	videos = request_recommended_videos.json()
@@ -180,11 +188,11 @@ if mode is None:
     li = xbmcgui.ListItem(dir_channels, iconImage='DefaultAddonTvInfo.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
-    url = build_url({'mode': 'search', 'foldername': dir_search})
+    url = build_url({'mode': dir_search, 'foldername': dir_search})
     li = xbmcgui.ListItem(dir_search, iconImage='DefaultAddonsSearch.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 	
-    url = build_url({'mode': 'settings', 'foldername': dir_settings})
+    url = build_url({'mode': dir_settings, 'foldername': dir_settings})
     li = xbmcgui.ListItem(dir_settings, iconImage='DefaultAddonProgram.png')
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 	
@@ -199,7 +207,11 @@ elif mode[0] == 'folder':
 		categories = categories()
 		categoryGen = (category for category in categories if category['naziv'] != 'YouTube')
 		for category in categoryGen:
-			name = category['naziv'].encode('utf-8')
+			active_lang = xbmc.getLanguage()
+			if active_lang == 'Croatian':
+				name = category['naziv'].encode('utf-8')
+			else:
+				name = category['naziv_en']
 			url = build_url({'mode': 'folder', 'foldername': name})
 			categoryImage = category_image_base_url + category['slika']
 			li = xbmcgui.ListItem(name, iconImage=categoryImage)
@@ -239,11 +251,11 @@ elif mode[0] == 'folder':
 			channel_video_count = channel[0]['emisije'].encode('utf-8')
 			start_channel(channel_id,channel_video_count)
 
-elif mode[0] == dir_search.lower():
+elif mode[0] == dir_search:
 	videos = search_videos()
 	list_search_or_recommended_videos(videos)
 
-elif mode[0] == dir_settings.lower():		
+elif mode[0] == dir_settings:		
 	control.openSettings()
 
 else:
