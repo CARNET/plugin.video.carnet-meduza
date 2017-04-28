@@ -88,24 +88,30 @@ def dev_reg(device_id):
 """Takes response from reg_dev, along with api key"""
 def check_reg(response, device_id):
 	response_parsed = urlparse.urlparse(response)
-	response_code = urlparse.parse_qs(response_parsed.query)['status'][0]
-	# 200 means that 'device' was successfully registered with SP and device UID can be stored in the settings
-	if response_code == '200':
-		addon.setSetting('apikey',device_id)
-		user_info(device_id)
-		info_dialog_msg = addon.getLocalizedString(30209) 
-		control.infoDialog(info_dialog_msg)
-		#get addon userdata special:// and then translate to full path
-		userdata_path_special = xbmcaddon.Addon().getAddonInfo('profile').decode('utf-8')
-		userdata_path = xbmc.translatePath(userdata_path_special)
-		# Create a storage object
-		with Storage(userdata_path) as key_store: 
-			key_store['reg_dev_status'] = 'is_reg'
-	else: 
-		ret_codes = {'100':30215, '300':30216, '400':30217, '401':30218}
-		ret_message = addon.getLocalizedString(ret_codes[response_code])
-		control.infoDialog(ret_message)
-	
+	# if reponse doesn't return proper status reponse due to wrong usually username/password entry 
+	# catch keyError and pop custom message
+	try:
+		response_code = urlparse.parse_qs(response_parsed.query)['status'][0]
+		# 200 means that 'device' was successfully registered with SP and device UID can be stored in the settings
+		if response_code == '200':
+			addon.setSetting('apikey',device_id)
+			user_info(device_id)
+			info_dialog_msg = addon.getLocalizedString(30209) 
+			control.infoDialog(info_dialog_msg)
+			#get addon userdata special:// and then translate to full path
+			userdata_path_special = xbmcaddon.Addon().getAddonInfo('profile').decode('utf-8')
+			userdata_path = xbmc.translatePath(userdata_path_special)
+			# Create a storage object
+			with Storage(userdata_path) as key_store: 
+				key_store['reg_dev_status'] = 'is_reg'
+		else: 
+			ret_codes = {'100':30215, '300':30216, '400':30217, '401':30218}
+			ret_message = addon.getLocalizedString(ret_codes[response_code])
+			control.infoDialog(ret_message)
+	except KeyError:
+		sso_err_msg = addon.getLocalizedString(30219)
+		control.infoDialog(sso_err_msg)
+
 def get_pwd():
 	"""Storing SSO password is not best way to go, so just get the it, when needed. Returns entered password."""
 	heading_msg = addon.getLocalizedString(30210) 

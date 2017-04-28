@@ -50,7 +50,7 @@ msgstr "Opće postavke"
 
 msgctxt "#30111"
 msgid "Number of Recommends"
-msgstr "Broj prepručenog sadržaja"
+msgstr "Broj preporučenog sadržaja"
 
 msgctxt "#30112"
 msgid "Sort by"
@@ -138,8 +138,8 @@ msgid "Wrong entry. Please try again!"
 msgstr "Pogrešan unos. Pokušate ponovo!"
 
 msgctxt "#30212"
-msgid " - You are good to go!"
-msgstr " - Dodatak spreman za korištenje!"
+msgid "\nYou are good to go!"
+msgstr "\nDodatak spreman za korištenje!"
 
 msgctxt "#30213"
 msgid "Error! Please check your settings or try again latter."
@@ -164,4 +164,8 @@ msgstr "Greška: neuspješna registracija."
 msgctxt "#30218"
 msgid "Device already registered."
 msgstr "Uređaj je već registriran."
+
+msgctxt "#30219"
+msgid "Authentication error. Please check your username and password."
+msgstr "Greška kod autentifikacije. Molim provjerite vaš korisnički račun i zaporku."
 

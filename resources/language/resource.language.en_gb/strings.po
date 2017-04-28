@@ -138,7 +138,7 @@ msgid "Wrong entry. Please try again!"
 msgstr ""
 
 msgctxt "#30212"
-msgid " - Your are good to go!"
+msgid "\nYou are good to go!"
 msgstr ""
 
 msgctxt "#30213"
@@ -163,5 +163,9 @@ msgstr ""
 
 msgctxt "#30218"
 msgid "Device already registered."
+msgstr ""
+
+msgctxt "#30219"
+msgid "Authentication error. Please check your username and password."
 msgstr ""
 
