@@ -25,7 +25,7 @@ def channels():
 def category_videos(name,current_page_number):
 	"""Returns list of vidoes (25 per page) inside selected category"""
 	for category in categories:
-		if category['naziv'] == name:
+		if category[lang_api_prop] == name:
 			skip = int(current_page_number) * 25
 			category_id = category['ID']
 			request_category_videos = requests.get(api_base_url + 'category/?id=' + category_id + '&skip=' + str(skip) + '&uid=' + api_key)
@@ -121,7 +121,6 @@ def list_category_videos(videos,current_page_number,foldername):
 								"Duration": duration
 								})
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
-	
 		pages_num = video_num / 25
 		if int(current_page_number) < pages_num:
 			int_current_page_number = int(current_page_number)
@@ -174,6 +173,13 @@ dir_channels = addon.getLocalizedString(30203)
 dir_search = addon.getLocalizedString(30204)
 dir_settings = addon.getLocalizedString(30205)
 
+# get api lang property (en|hr)
+active_lang = xbmc.getLanguage()
+if active_lang == 'Croatian':
+	lang_api_prop = 'naziv'
+else:
+	lang_api_prop = 'naziv_en'
+
 if mode is None:
     url = build_url({'mode': 'folder', 'foldername': dir_recommends})
     li = xbmcgui.ListItem(dir_recommends, iconImage='DefaultVideo.png')
@@ -198,29 +204,25 @@ if mode is None:
     xbmcplugin.endOfDirectory(addon_handle)
 
 elif mode[0] == 'folder':
-	if args['foldername'][0] == dir_recommends:
+	if args['foldername'][0].decode('utf-8') == dir_recommends:
 		videos =  recommended_videos()
 		list_search_or_recommended_videos(videos)
 
-	elif args['foldername'][0] == dir_categories:
+	elif args['foldername'][0].decode('utf-8') == dir_categories:
 		categories = categories()
 		categoryGen = (category for category in categories if category['naziv'] != 'YouTube')
 		for category in categoryGen:
 			active_lang = xbmc.getLanguage()
-			if active_lang == 'Croatian':
-				name = category['naziv'].encode('utf-8')
-			else:
-				name = category['naziv_en']
+			name = category[lang_api_prop].encode('utf-8')
 			url = build_url({'mode': 'folder', 'foldername': name})
 			categoryImage = category_image_base_url + category['slika']
 			li = xbmcgui.ListItem(name, iconImage=categoryImage)
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 		xbmcplugin.endOfDirectory(addon_handle)
 
-	elif args['foldername'][0] == dir_channels:
+	elif args['foldername'][0].decode('utf-8') == dir_channels:
 		channels = channels()
-		channelGen = (channel for channel in channels if channel['naziv'] != 'UNWANTED')
-		for channel in channelGen:
+		for channel in channels:
 			name = channel['naziv'].encode('utf-8')
 			url = build_url({'mode': 'folder', 'foldername': name})
 			try:
@@ -237,7 +239,7 @@ elif mode[0] == 'folder':
 		channels = channels()
 		foldername = args['foldername'][0]
 		#api response is 'list of dictionaries' so using lambda is nice way of checking for values
-		if filter(lambda name: name['naziv'] == foldername.decode('utf-8'), categories):
+		if filter(lambda name: name[lang_api_prop] == foldername.decode('utf-8'), categories):
 			if not 'pagenumber' in args:
 				current_page_number = '0'
 			else:

@@ -24,7 +24,7 @@ CARNet Meduza je usluga za distribuciju višemedijskih sadržaja namijenjenih ob
     <forum></forum>
     <website></website>
     <email>iptv@carnet.hr</email>
-    <source>https://github.com/scavara/plugin.video.carnet-meduza</source>
+    <source>https://github.com/CARNet/plugin.video.carnet-meduza</source>
     <news></news>
     <assets>
         <icon>resources/icon.png</icon>
