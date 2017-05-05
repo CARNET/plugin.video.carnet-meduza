@@ -2,10 +2,9 @@
 import os, sys, string, random, platform
 import urllib, urlparse, json
 import requests
-import xbmc, xbmcaddon
+import xbmc, xbmcaddon,xbmcgui
 import mechanize
 from mechanize import Browser
-from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
 from classes.memstorage import Storage
 from classes.memstorage import MemStorage #tnx/credit: http://romanvm.github.io/script.module.simpleplugin/storage.html
 
@@ -97,7 +96,7 @@ def check_reg(response, device_id):
 			addon.setSetting('apikey',device_id)
 			user_info(device_id)
 			info_dialog_msg = addon.getLocalizedString(30209) 
-			control.infoDialog(info_dialog_msg)
+			xbmcgui.Dialog(info_dialog_msg)	
 			#get addon userdata special:// and then translate to full path
 			userdata_path_special = xbmcaddon.Addon().getAddonInfo('profile').decode('utf-8')
 			userdata_path = xbmc.translatePath(userdata_path_special)
@@ -107,10 +106,10 @@ def check_reg(response, device_id):
 		else: 
 			ret_codes = {'100':30215, '300':30216, '400':30217, '401':30218}
 			ret_message = addon.getLocalizedString(ret_codes[response_code])
-			control.infoDialog(ret_message)
+			xbmcgui.Dialog(ret_message)
 	except KeyError:
 		sso_err_msg = addon.getLocalizedString(30219)
-		control.infoDialog(sso_err_msg)
+		xbmcgui.Dialog(sso_err_msg)
 
 def get_pwd():
 	"""Storing SSO password is not best way to go, so just get the it, when needed. Returns entered password."""
@@ -123,7 +122,7 @@ def get_pwd():
 		enter_pwd = keyboard.getText()
 		if enter_pwd is None or len(str(enter_pwd)) == 0:
 			info_dialog_msg = addon.getLocalizedString(30211)
-			control.infoDialog(info_dialog_msg)
+			xbmcgui.Dialog(info_dialog_msg)
 	del keyboard
 	return enter_pwd
 
@@ -136,10 +135,10 @@ def pre_run():
 	registered_status = r.json()['code']
 	if registered_status == 200:
 		success_msg = addon.getLocalizedString(30212)
-		control.infoDialog(r.json()['message'] + success_msg)
+		xbmcgui.Dialog(r.json()['message'] + success_msg)
 	else:
 		error_msg = addon.getLocalizedString(30213)
-		control.infoDialog(error_msg)
+		xbmcgui.Dialog(error_msg)
 
 
 # get user info and populate the settings.xml
@@ -171,8 +170,9 @@ addon.setSetting('apikey',api_key)
 		# if aai_username missing open settings, otherwise  start device registration
 if not aai_username and dev_reg_status == 'not_reg':
 	info_dialog_msg = addon.getLocalizedString(30214)
-	control.infoDialog(info_dialog_msg)	
-	control.openSettings()
+	xbmcgui.Dialog(info_dialog_msg)
+	xbmcgui.Dialog()	
+	xbmcaddon.Addon().openSettings()	
 
 elif dev_reg_status == 'not_reg':
 	reg_response = dev_reg(api_key)

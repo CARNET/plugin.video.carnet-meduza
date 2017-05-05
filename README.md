@@ -13,14 +13,14 @@ Languagues:
 - Only Croatian and English (switch using Settings -> Interface -> Regional -> Language)
 
 Platforms:
-- *should* be all. Tested on: Windows 10, Linux Debian 9 (both 64-bit) and Android ARM. 
+- *should* be all. Tested on: Windows 10, Linux Debian 9 (both 64-bit) and Android 4.4 (ARM). 
 
 ### Installation 
 Requirements: 
 - Minimum supported Kodi version: 17 (Krypton)
 - Valid [AAI@EduHr](http://www.aaiedu.hr/en) account
 
-Install this addon using the official Kodi repository (submission to official Kodi repo is in process - fingers crossed). Kodi will update the addon automatically. If you know what are you doing and like to things manually by cloning and zipping, know yourself out. 
+Install this addon using the official Kodi repository. Kodi will update the addon automatically. If you know what are you doing and like to things manually by cloning and zipping, knock yourself out. 
 
 Go to Add-ons -> Add-on browser -> Search -> enter 'CARNet Meduza' -> Install.
 

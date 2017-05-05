@@ -3,7 +3,6 @@ import os, sys
 import urllib, urlparse, json
 import xbmcgui, xbmcplugin, xbmcaddon
 import requests
-from modules import control #tnx/credit:https://github.com/shannah/exodus/blob/master/resources/lib/modules/control.py
 from register import device
 
 def build_url(query):
@@ -82,18 +81,21 @@ def list_search_or_recommended_videos(videos):
 			duration = reduce(lambda x, y: x*60+y, [int(i) for i in (video['trajanje'].replace(':',',')).split(',')])
 			video_info = video_url_description(video_id)
 			try:
-				url = video_info['stream_url'].encode('utf-8') + '|User-Agent=Mozilla/5.0&Referer=https://meduza.carnet.hr'
+				header = urllib.urlencode({'Referer':'https://meduza.carnet.hr'})
+				url = video_info['stream_url'] +'|'+ header
 				description = video_info['opis'].encode('utf-8')
 			except KeyError:
 				url = ''
 				description = addon.getLocalizedString(30207)
 				pass		
 			image = video['slika']
-			li = xbmcgui.ListItem(name, iconImage=image)
+			li = xbmcgui.ListItem(name)
+			li.setArt({'icon':image})
 			li.setInfo( type="Video", infoLabels={ 
 							"Plot": description, 
 							"Genre": genre,
-							"Duration": duration
+							"Duration": duration,
+							"mediatype":"video"
 								})
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 		xbmcplugin.endOfDirectory(addon_handle)
@@ -112,13 +114,16 @@ def list_category_videos(videos,current_page_number,foldername):
 			video_id = video['ID']
 			duration = reduce(lambda x, y: x*60+y, [int(i) for i in (video['trajanje'].replace(':',',')).split(',')])
 			video_info = video_url_description(video_id)
-			url = video_info['stream_url'] + '|User-Agent=Mozilla/5.0&Referer=https://meduza.carnet.hr'
+			header = urllib.urlencode({'Referer':'https://meduza.carnet.hr'})
+			url = video_info['stream_url'] +'|'+ header
 			image = video['slika']
 			description = video_info['opis'].encode('utf-8')
-			li = xbmcgui.ListItem(name, iconImage=image)
+			li = xbmcgui.ListItem(name)
+			li.setArt({'icon':image})
 			li.setInfo( type="Video", infoLabels={ 
 								"Plot": description, 
-								"Duration": duration
+								"Duration": duration,
+								"mediatype":"video"
 								})
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 		pages_num = video_num / 25
@@ -142,10 +147,12 @@ def start_channel(channel_id,channel_video_count):
 	channel_offset = channel['offset']
 	schedule_gen = ((i, j) for i, j in enumerate(schedule))
 	for i, j in schedule_gen:
-	        li = xbmcgui.ListItem(j['naslov'], 'label1', thumbnailImage = j['slika'])
+	        li = xbmcgui.ListItem(j['naslov'])
+		li.setArt({'thumb':j['slika']})
 		itemArgs = {
                 'title': j['naslov'].encode('utf-8'),
                 'plot': j['opis'].encode('utf-8'),
+		'mediatype':'video',
                 'tracknumber': i 
             	}
 		li.setInfo('video', itemArgs)
@@ -182,23 +189,28 @@ else:
 
 if mode is None:
     url = build_url({'mode': 'folder', 'foldername': dir_recommends})
-    li = xbmcgui.ListItem(dir_recommends, iconImage='DefaultVideo.png')
+    li = xbmcgui.ListItem(dir_recommends)
+    li.setArt({'icon':'DefaultVideo.png'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
     url = build_url({'mode': 'folder', 'foldername': dir_categories})
-    li = xbmcgui.ListItem(dir_categories, iconImage='DefaultAddonVideo.png')
+    li = xbmcgui.ListItem(dir_categories) 
+    li.setArt({'icon':'DefaultAddonVideo.png'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
     url = build_url({'mode': 'folder', 'foldername': dir_channels})
-    li = xbmcgui.ListItem(dir_channels, iconImage='DefaultAddonTvInfo.png')
+    li = xbmcgui.ListItem(dir_channels) 
+    li.setArt({'icon':'DefaultAddonTvInfo.png'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 
     url = build_url({'mode': dir_search, 'foldername': dir_search})
-    li = xbmcgui.ListItem(dir_search, iconImage='DefaultAddonsSearch.png')
+    li = xbmcgui.ListItem(dir_search) 
+    li.setArt({'icon':'DefaultAddonsSearch.png'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 	
     url = build_url({'mode': dir_settings, 'foldername': dir_settings})
-    li = xbmcgui.ListItem(dir_settings, iconImage='DefaultAddonProgram.png')
+    li = xbmcgui.ListItem(dir_settings)
+    li.setArt({'icon':'DefaultAddonProgram.png'})
     xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 	
     xbmcplugin.endOfDirectory(addon_handle)
@@ -216,7 +228,8 @@ elif mode[0] == 'folder':
 			name = category[lang_api_prop].encode('utf-8')
 			url = build_url({'mode': 'folder', 'foldername': name})
 			categoryImage = category_image_base_url + category['slika']
-			li = xbmcgui.ListItem(name, iconImage=categoryImage)
+			li = xbmcgui.ListItem(name)
+			li.setArt({'icon':categoryImage})
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li, isFolder=True)
 		xbmcplugin.endOfDirectory(addon_handle)
 
@@ -225,12 +238,9 @@ elif mode[0] == 'folder':
 		for channel in channels:
 			name = channel['naziv'].encode('utf-8')
 			url = build_url({'mode': 'folder', 'foldername': name})
-			try:
-				channelImage = channel['slika']
-			except KeyError:
-				channelImage = ''
-				pass		
-			li = xbmcgui.ListItem(name, iconImage=channelImage)
+			channelImage = channel.get('slika','')
+			li = xbmcgui.ListItem(name)
+			li.setArt({'icon':channelImage})
 			xbmcplugin.addDirectoryItem(handle=addon_handle, url=url, listitem=li)
 		xbmcplugin.endOfDirectory(addon_handle)
 
@@ -240,10 +250,7 @@ elif mode[0] == 'folder':
 		foldername = args['foldername'][0]
 		#api response is 'list of dictionaries' so using lambda is nice way of checking for values
 		if filter(lambda name: name[lang_api_prop] == foldername.decode('utf-8'), categories):
-			if not 'pagenumber' in args:
-				current_page_number = '0'
-			else:
-				current_page_number = args['pagenumber'][0] 
+			current_page_number = args.get('pagenumber',['0'])[0]
 			videos =  category_videos(foldername.decode('utf-8'),current_page_number)
 			list_category_videos(videos,current_page_number,foldername.decode('utf-8'))
 		else:
@@ -257,8 +264,7 @@ elif mode[0] == dir_search:
 	list_search_or_recommended_videos(videos)
 
 elif mode[0] == dir_settings:		
-	control.openSettings()
-
+	xbmcaddon.Addon().openSettings()	
 else:
 	pass
 
